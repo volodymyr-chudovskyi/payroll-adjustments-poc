@@ -37,6 +37,18 @@ final class EarningLine
         return $line;
     }
 
+    /** @param list<DomainEvent> $events */
+    public static function reconstitute(LineId $id, array $events): self
+    {
+        $line = new self($id);
+
+        foreach ($events as $event) {
+            $line->apply($event);
+        }
+
+        return $line;
+    }
+
     public function recalculate(Money $amount): void
     {
         if ($this->adjustments !== []) {

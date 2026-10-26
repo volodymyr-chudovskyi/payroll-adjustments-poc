@@ -169,3 +169,25 @@ it('freezes the base at the last system value before the first adjustment', func
 
     expect($line->auditHistory()->frozenSystemValue)->toEqual(Money::fromCents(105_000));
 });
+
+it('reconstitutes an identical line from its event history', function (): void {
+    $id = LineId::generate();
+    $line = EarningLine::calculate($id, Money::fromCents(100_000));
+    $line->recalculate(Money::fromCents(105_000));
+    $line->addManualAdjustment(Money::fromCents(-4_555), new AdjustmentComment('Declined benefit'));
+    $line->addManualAdjustment(Money::fromCents(10_010), new AdjustmentComment('Missed overtime bonus'));
+
+    $restored = EarningLine::reconstitute($id, $line->releaseEvents());
+
+    expect($restored->currentValue())->toEqual($line->currentValue())
+        ->and($restored->auditHistory())->toEqual($line->auditHistory());
+});
+
+it('has no pending events after reconstitution', function (): void {
+    $id = LineId::generate();
+    $line = EarningLine::calculate($id, Money::fromCents(100_000));
+
+    $restored = EarningLine::reconstitute($id, $line->releaseEvents());
+
+    expect($restored->releaseEvents())->toBe([]);
+});
