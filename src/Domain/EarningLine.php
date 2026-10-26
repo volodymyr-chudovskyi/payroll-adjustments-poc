@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Payroll\Domain;
 
 use DateTimeImmutable;
+use Payroll\Domain\Audit\AuditEntry;
+use Payroll\Domain\Audit\AuditHistory;
 use Payroll\Domain\Event\DomainEvent;
 use Payroll\Domain\Event\LineCalculated;
 use Payroll\Domain\Event\LineRecalculated;
@@ -65,6 +67,22 @@ final class EarningLine
             $this->adjustments,
             static fn(Money $value, ManualAdjustmentAdded $adjustment): Money => $value->add($adjustment->amount),
             $this->systemValue,
+        );
+    }
+
+    public function auditHistory(): AuditHistory
+    {
+        return new AuditHistory(
+            $this->systemValue,
+            array_map(
+                static fn(ManualAdjustmentAdded $adjustment): AuditEntry => new AuditEntry(
+                    $adjustment->adjustmentId,
+                    $adjustment->amount,
+                    $adjustment->comment,
+                ),
+                $this->adjustments,
+            ),
+            $this->currentValue(),
         );
     }
 

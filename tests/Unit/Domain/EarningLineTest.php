@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Payroll\Domain\Audit\AuditEntry;
 use Payroll\Domain\EarningLine;
 use Payroll\Domain\Event\LineCalculated;
 use Payroll\Domain\Event\LineRecalculated;
@@ -139,4 +140,32 @@ it('treats a compensating adjustment as a new entry, not an edit', function (): 
 
     expect($manualAdjustments)->toHaveCount(2)
         ->and($line->currentValue())->toEqual(Money::fromCents(105_000));
+});
+
+it('exposes frozen system value, ordered entries and current value', function (): void {
+    $line = EarningLine::calculate(LineId::generate(), Money::fromCents(100_000));
+    $line->recalculate(Money::fromCents(105_000));
+    $line->addManualAdjustment(Money::fromCents(-4_555), new AdjustmentComment('Declined benefit'));
+    $line->addManualAdjustment(Money::fromCents(10_010), new AdjustmentComment('Missed overtime bonus'));
+
+    $audit = $line->auditHistory();
+
+    expect($audit->frozenSystemValue)->toEqual(Money::fromCents(105_000))
+        ->and($audit->currentValue)->toEqual(Money::fromCents(110_455))
+        ->and(array_map(
+            static fn(AuditEntry $entry): array => [$entry->amount->cents, $entry->comment->text],
+            $audit->entries,
+        ))->toBe([
+            [-4_555, 'Declined benefit'],
+            [10_010, 'Missed overtime bonus'],
+        ]);
+});
+
+it('freezes the base at the last system value before the first adjustment', function (): void {
+    $line = EarningLine::calculate(LineId::generate(), Money::fromCents(100_000));
+    $line->recalculate(Money::fromCents(105_000));
+    $line->addManualAdjustment(Money::fromCents(-4_555), new AdjustmentComment('Declined benefit'));
+    $line->recalculate(Money::fromCents(120_000));
+
+    expect($line->auditHistory()->frozenSystemValue)->toEqual(Money::fromCents(105_000));
 });
