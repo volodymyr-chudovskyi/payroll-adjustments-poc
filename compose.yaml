@@ -1,0 +1,9 @@
+services:
+  app:
+    build: .
+    volumes:
+      - .:/app
+      - composer-cache:/root/.composer/cache
+
+volumes:
+  composer-cache:
