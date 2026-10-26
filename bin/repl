@@ -1,0 +1,26 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+require __DIR__.'/../vendor/autoload.php';
+
+use Payroll\Application\ReplSession;
+use Payroll\Infrastructure\SqliteEventStoreRepository;
+
+$session = new ReplSession(new SqliteEventStoreRepository(new PDO('sqlite::memory:')));
+
+echo "Payroll earning line REPL. Type 'help' for commands, 'exit' to quit.", PHP_EOL;
+
+while (true) {
+    echo 'payroll> ';
+    $input = fgets(STDIN);
+
+    if ($input === false || in_array(trim($input), ['exit', 'quit'], true)) {
+        break;
+    }
+
+    foreach ($session->handle($input) as $line) {
+        echo $line, PHP_EOL;
+    }
+}

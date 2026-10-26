@@ -57,6 +57,28 @@ Final audit history
 The same table is pinned as the canonical acceptance test:
 [`tests/Feature/AcceptanceScenarioTest.php`](tests/Feature/AcceptanceScenarioTest.php).
 
+## Interactive mode
+
+`composer repl` starts an interactive session against the SQLite event store, so the rules can be explored by hand:
+
+```
+$ docker compose run --rm app composer repl
+Payroll earning line REPL. Type 'help' for commands, 'exit' to quit.
+payroll> calculate 1000.00
+Line calculated: $1,000.00
+payroll> recalculate 1050.00
+Line recalculated: $1,050.00
+payroll> adjust -45.55 Employee declined dental benefit
+Adjustment recorded (-$45.55). Current value: $1,004.45
+payroll> recalculate 1200.00
+Recalculation ignored: the line is frozen by manual corrections. Current value: $1,004.45
+payroll> audit
+Audit history
+  System value (frozen)                                                       $1,050.00
+  Adjustment 1: Employee declined dental benefit                                -$45.55
+  Current (new) value                                                         $1,004.45
+```
+
 ## Architecture
 
 The aggregate is event-sourced with a hand-rolled mechanism of ~30 lines (`recordThat` / `apply` / `reconstitute`) — no event-sourcing library. The assignment is fundamentally about an immutable audit trail, and an append-only event stream *is* that audit trail, so the write model and the audit requirement collapse into one concept. Rolling it by hand keeps the whole mechanism inspectable: there is no framework underneath to explain.
