@@ -49,6 +49,11 @@ final class EarningLine
         return $line;
     }
 
+    public function id(): LineId
+    {
+        return $this->id;
+    }
+
     public function recalculate(Money $amount): void
     {
         if ($this->adjustments !== []) {
