@@ -1,0 +1,15 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+require __DIR__.'/../vendor/autoload.php';
+
+use Payroll\Application\ScenarioRunner;
+use Payroll\Infrastructure\SqliteEventStoreRepository;
+
+$repository = new SqliteEventStoreRepository(new PDO('sqlite::memory:'));
+
+foreach (new ScenarioRunner($repository)->run() as $line) {
+    echo $line, PHP_EOL;
+}
