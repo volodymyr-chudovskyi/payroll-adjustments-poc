@@ -61,25 +61,6 @@ final readonly class ScenarioRunner
 
         $audit = new GetAuditHistoryHandler($this->repository)(new GetAuditHistory($lineId));
 
-        $output[] = '';
-        $output[] = 'Final audit history';
-        $output[] = sprintf('  %-74s %10s', 'System value (frozen)', $audit->frozenSystemValue->format());
-
-        foreach ($audit->entries as $index => $entry) {
-            $output[] = sprintf(
-                '  %-74s %10s',
-                sprintf('Adjustment %d: %s', $index + 1, $entry->comment->text),
-                $this->signed($entry->amount),
-            );
-        }
-
-        $output[] = sprintf('  %-74s %10s', 'Current (new) value', $audit->currentValue->format());
-
-        return $output;
-    }
-
-    private function signed(Money $amount): string
-    {
-        return $amount->cents > 0 ? '+' . $amount->format() : $amount->format();
+        return [...$output, '', 'Final audit history', ...new AuditFormatter()->format($audit)];
     }
 }
