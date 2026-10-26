@@ -1,0 +1,45 @@
+{
+    "name": "vchudovskyi/payroll-adjustments-poc",
+    "description": "Proof of concept: history of manual adjustments to an earning line",
+    "license": "MIT",
+    "type": "project",
+    "require": {
+        "php": "^8.5",
+        "ext-pdo_sqlite": "*"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.0",
+        "pestphp/pest": "^5.3",
+        "phpstan/phpstan": "^2.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Payroll\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "scripts": {
+        "demo": "php bin/demo",
+        "test": "pest --parallel",
+        "test:coverage": "pest --coverage --min=90",
+        "test:types": "pest --type-coverage --min=100",
+        "test:mutate": "pest --mutate --min=85 --covered-only",
+        "analyse": "phpstan analyse",
+        "format": "pint",
+        "check": [
+            "@format",
+            "@analyse",
+            "@test"
+        ]
+    }
+}
