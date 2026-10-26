@@ -22,6 +22,8 @@ final class EarningLine
     /** @var list<DomainEvent> */
     private array $pendingEvents = [];
 
+    private int $version = 0;
+
     private Money $systemValue;
 
     /** @var list<ManualAdjustmentAdded> */
@@ -52,6 +54,11 @@ final class EarningLine
     public function id(): LineId
     {
         return $this->id;
+    }
+
+    public function version(): int
+    {
+        return $this->version;
     }
 
     public function recalculate(Money $amount): void
@@ -120,6 +127,8 @@ final class EarningLine
 
     private function apply(DomainEvent $event): void
     {
+        $this->version++;
+
         if ($event instanceof LineCalculated || $event instanceof LineRecalculated) {
             $this->systemValue = $event->amount;
         } elseif ($event instanceof ManualAdjustmentAdded) {
