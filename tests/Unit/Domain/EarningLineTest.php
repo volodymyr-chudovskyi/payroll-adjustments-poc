@@ -83,3 +83,33 @@ it('rejects a zero-amount adjustment', function (): void {
     expect(fn() => $line->addManualAdjustment(Money::fromCents(0), new AdjustmentComment('No-op')))
         ->toThrow(AdjustmentAmountCannotBeZero::class);
 });
+
+it('ignores recalculation after the first manual adjustment', function (): void {
+    $line = EarningLine::calculate(LineId::generate(), Money::fromCents(105_000));
+    $line->addManualAdjustment(Money::fromCents(-4_555), new AdjustmentComment('Declined benefit'));
+
+    $line->recalculate(Money::fromCents(120_000));
+
+    expect($line->currentValue())->toEqual(Money::fromCents(100_445));
+});
+
+it('records no event for an ignored recalculation', function (): void {
+    $line = EarningLine::calculate(LineId::generate(), Money::fromCents(105_000));
+    $line->addManualAdjustment(Money::fromCents(-4_555), new AdjustmentComment('Declined benefit'));
+    $line->releaseEvents();
+
+    $line->recalculate(Money::fromCents(120_000));
+
+    expect($line->releaseEvents())->toBe([]);
+});
+
+it('keeps ignoring recalculation after further adjustments', function (): void {
+    $line = EarningLine::calculate(LineId::generate(), Money::fromCents(105_000));
+    $line->addManualAdjustment(Money::fromCents(-4_555), new AdjustmentComment('Declined benefit'));
+    $line->recalculate(Money::fromCents(120_000));
+    $line->addManualAdjustment(Money::fromCents(10_010), new AdjustmentComment('Missed overtime bonus'));
+
+    $line->recalculate(Money::fromCents(130_000));
+
+    expect($line->currentValue())->toEqual(Money::fromCents(110_455));
+});

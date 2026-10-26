@@ -37,6 +37,10 @@ final class EarningLine
 
     public function recalculate(Money $amount): void
     {
+        if ($this->adjustments !== []) {
+            return;
+        }
+
         $this->recordThat(new LineRecalculated($this->id, $amount, new DateTimeImmutable()));
     }
 
