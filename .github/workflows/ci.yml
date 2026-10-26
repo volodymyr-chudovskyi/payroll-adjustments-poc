@@ -27,4 +27,6 @@ jobs:
 
       - run: vendor/bin/phpstan analyse --no-progress
 
-      - run: vendor/bin/pest --parallel
+      - run: vendor/bin/pest --parallel --coverage --min=90
+
+      - run: vendor/bin/pest --type-coverage --min=100
