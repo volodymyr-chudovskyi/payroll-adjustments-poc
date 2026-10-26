@@ -5,6 +5,9 @@ declare(strict_types=1);
 use Payroll\Domain\EarningLine;
 use Payroll\Domain\Event\LineCalculated;
 use Payroll\Domain\Event\LineRecalculated;
+use Payroll\Domain\Event\ManualAdjustmentAdded;
+use Payroll\Domain\Exception\AdjustmentAmountCannotBeZero;
+use Payroll\Domain\ValueObject\AdjustmentComment;
 use Payroll\Domain\ValueObject\LineId;
 use Payroll\Domain\ValueObject\Money;
 
@@ -48,4 +51,35 @@ it('records LineRecalculated', function (): void {
 
     expect($events)->toHaveCount(1)
         ->and($event->amount)->toEqual(Money::fromCents(105_000));
+});
+
+it('applies a manual adjustment to the current value', function (): void {
+    $line = EarningLine::calculate(LineId::generate(), Money::fromCents(105_000));
+
+    $line->addManualAdjustment(Money::fromCents(-4_555), new AdjustmentComment('Declined benefit'));
+
+    expect($line->currentValue())->toEqual(Money::fromCents(100_445));
+});
+
+it('records ManualAdjustmentAdded with its own id, amount and comment', function (): void {
+    $line = EarningLine::calculate(LineId::generate(), Money::fromCents(105_000));
+    $line->releaseEvents();
+
+    $line->addManualAdjustment(Money::fromCents(-4_555), new AdjustmentComment('Declined benefit'));
+
+    $events = $line->releaseEvents();
+    $event = $events[0];
+    assert($event instanceof ManualAdjustmentAdded);
+
+    expect($events)->toHaveCount(1)
+        ->and($event->amount)->toEqual(Money::fromCents(-4_555))
+        ->and($event->comment->text)->toBe('Declined benefit')
+        ->and($event->adjustmentId->value)->not->toBe('');
+});
+
+it('rejects a zero-amount adjustment', function (): void {
+    $line = EarningLine::calculate(LineId::generate(), Money::fromCents(105_000));
+
+    expect(fn() => $line->addManualAdjustment(Money::fromCents(0), new AdjustmentComment('No-op')))
+        ->toThrow(AdjustmentAmountCannotBeZero::class);
 });
