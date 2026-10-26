@@ -19,7 +19,8 @@ With Docker (no local PHP needed):
 ```sh
 docker compose run --rm app composer install
 docker compose run --rm app composer check   # pint + phpstan + tests
-docker compose run --rm app composer demo
+docker compose run --rm app composer demo    # replay the reference scenario
+docker compose run --rm app composer repl    # interactive session (see below)
 ```
 
 With local PHP 8.5:
@@ -28,6 +29,7 @@ With local PHP 8.5:
 composer install
 composer check
 composer demo
+composer repl
 ```
 
 ## Demo
