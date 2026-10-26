@@ -82,7 +82,7 @@ it('rejects a zero-amount adjustment', function (): void {
     $line = EarningLine::calculate(LineId::generate(), Money::fromCents(105_000));
 
     expect(fn() => $line->addManualAdjustment(Money::fromCents(0), new AdjustmentComment('No-op')))
-        ->toThrow(AdjustmentAmountCannotBeZero::class);
+        ->toThrow(AdjustmentAmountCannotBeZero::class, 'A manual adjustment must change the value of the line.');
 });
 
 it('ignores recalculation after the first manual adjustment', function (): void {

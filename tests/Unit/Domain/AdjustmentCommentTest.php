@@ -16,7 +16,7 @@ it('trims surrounding whitespace', function (): void {
 
 it('rejects an empty comment', function (): void {
     expect(fn(): AdjustmentComment => new AdjustmentComment(''))
-        ->toThrow(AdjustmentCommentCannotBeEmpty::class);
+        ->toThrow(AdjustmentCommentCannotBeEmpty::class, 'A manual adjustment requires a non-empty comment.');
 });
 
 it('rejects a whitespace-only comment', function (): void {

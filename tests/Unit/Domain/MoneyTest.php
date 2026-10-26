@@ -36,3 +36,9 @@ it('formats negative amounts', function (): void {
     expect(Money::fromCents(-4_555)->format())->toBe('-$45.55')
         ->and(Money::fromCents(-10)->format())->toBe('-$0.10');
 });
+
+it('formats boundary amounts without a stray sign', function (): void {
+    expect(Money::fromCents(0)->format())->toBe('$0.00')
+        ->and(Money::fromCents(-1)->format())->toBe('-$0.01')
+        ->and(Money::fromCents(1)->format())->toBe('$0.01');
+});

@@ -37,7 +37,8 @@ it('accumulates events across multiple saves', function (): void {
 
 it('throws when the line does not exist', function (): void {
     $repository = new InMemoryEarningLineRepository();
+    $id = LineId::generate();
 
-    expect(fn(): EarningLine => $repository->get(LineId::generate()))
-        ->toThrow(EarningLineNotFound::class);
+    expect(fn(): EarningLine => $repository->get($id))
+        ->toThrow(EarningLineNotFound::class, sprintf('Earning line %s does not exist.', $id->value));
 });

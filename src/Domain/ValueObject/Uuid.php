@@ -12,18 +12,11 @@ abstract readonly class Uuid implements Stringable
 
     public static function generate(): static
     {
-        $bytes = random_bytes(16);
-        $bytes[6] = chr(ord($bytes[6]) & 0x0F | 0x40);
-        $bytes[8] = chr(ord($bytes[8]) & 0x3F | 0x80);
-        $hex = bin2hex($bytes);
+        $hex = bin2hex(random_bytes(16));
+        $hex[12] = '4';
+        $hex[16] = '8';
 
-        return new static(implode('-', [
-            substr($hex, 0, 8),
-            substr($hex, 8, 4),
-            substr($hex, 12, 4),
-            substr($hex, 16, 4),
-            substr($hex, 20, 12),
-        ]));
+        return new static(vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split($hex, 4)));
     }
 
     public static function fromString(string $value): static
