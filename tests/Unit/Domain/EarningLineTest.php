@@ -113,3 +113,30 @@ it('keeps ignoring recalculation after further adjustments', function (): void {
 
     expect($line->currentValue())->toEqual(Money::fromCents(110_455));
 });
+
+it('accumulates multiple adjustments in order', function (): void {
+    $line = EarningLine::calculate(LineId::generate(), Money::fromCents(105_000));
+
+    $line->addManualAdjustment(Money::fromCents(-4_555), new AdjustmentComment('Declined benefit'));
+    $line->addManualAdjustment(Money::fromCents(10_010), new AdjustmentComment('Missed overtime bonus'));
+    $line->addManualAdjustment(Money::fromCents(-10), new AdjustmentComment('Minor rounding adjustment'));
+    $line->addManualAdjustment(Money::fromCents(-20), new AdjustmentComment('Second minor rounding adjustment'));
+
+    expect($line->currentValue())->toEqual(Money::fromCents(110_425));
+});
+
+it('treats a compensating adjustment as a new entry, not an edit', function (): void {
+    $line = EarningLine::calculate(LineId::generate(), Money::fromCents(105_000));
+    $line->releaseEvents();
+
+    $line->addManualAdjustment(Money::fromCents(-20), new AdjustmentComment('Second minor rounding adjustment'));
+    $line->addManualAdjustment(Money::fromCents(20), new AdjustmentComment('Correcting mistake in adjustment #4'));
+
+    $manualAdjustments = array_filter(
+        $line->releaseEvents(),
+        static fn($event): bool => $event instanceof ManualAdjustmentAdded,
+    );
+
+    expect($manualAdjustments)->toHaveCount(2)
+        ->and($line->currentValue())->toEqual(Money::fromCents(105_000));
+});
